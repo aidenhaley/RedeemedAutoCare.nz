@@ -1,4 +1,3 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Redeemed Auto Care</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
@@ -259,6 +258,10 @@
   .field input { font: 500 1rem var(--font); padding: 13px 16px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); color: var(--fg); min-width: 0; width: 100%; box-sizing: border-box; }
   .field input:focus-visible { outline: 3px solid var(--sky); outline-offset: 1px; border-color: var(--accent); }
   .field input[aria-invalid="true"] { border-color: #c0392b; }
+  .send-error { margin-top: 16px; padding: 14px 16px; border-radius: 14px; border: 2px solid var(--warn); color: var(--warn); display: grid; gap: 10px; justify-items: start; }
+  .send-error p { margin: 0; font-weight: 600; }
+  #panel-when:disabled { opacity: .6; }
+  .done-msg { margin: 16px 0 0; font-weight: 500; }
   .form-note { margin: 12px 0 0; font-size: 0.9rem; color: var(--muted); }
   .was { font-size: 0.85em; font-weight: 700; color: var(--warn); margin-right: 6px; text-decoration: line-through; text-decoration-thickness: 1.5px; text-decoration-color: color-mix(in srgb, var(--warn) 75%, transparent); letter-spacing: 0.01em; }
   .recap .total .was { color: inherit; text-decoration-color: currentColor; opacity: .75; }
@@ -590,6 +593,8 @@ text{font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-
             <label class="field"><span>Full name</span><input type="text" name="name" autocomplete="name" required></label>
             <label class="field"><span>Phone number</span><input type="tel" name="phone" autocomplete="tel" inputmode="tel" required></label>
             <label class="field"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>
+            <label class="field"><span>Vehicle make and model</span><input type="text" name="vehicle_make_model" autocomplete="off" placeholder="e.g. Toyota Hilux" required></label>
+            <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
             <button class="confirm" type="submit" id="send">Get my quote</button>
             <p class="form-note" id="form-note" role="status"></p>
           </form>
@@ -611,11 +616,17 @@ text{font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-
           <label class="areachip optchip"><input type="radio" name="time" value="midday" data-name="Mid day"><span><b>Mid day</b></span></label>
           <label class="areachip optchip"><input type="radio" name="time" value="afternoon" data-name="Afternoon"><span><b>Afternoon</b></span></label>
         </div>
+        <p class="form-note" id="send-status" role="status"></p>
+        <div class="send-error" id="send-error" role="alert" hidden>
+          <p>Sorry, we couldn't send your request just now. Please check your connection and try again.</p>
+          <button class="cta" type="button" id="send-retry">Try again</button>
+        </div>
       </fieldset>
       <fieldset id="panel-done" hidden>
         <legend class="step-title" id="done-title" style="margin-bottom: 14px">Thanks</legend>
         <dl class="recap" id="done-recap"></dl>
-        <p class="form-note" id="done-note">Sending enquiries to Redeemed Auto Care is not switched on yet on this draft page, so nothing has been sent.</p>
+        <p class="done-msg" id="done-note">Your quote request has been sent to Redeemed Auto Care. We'll review the details and be in touch on the phone number or email you gave us to confirm your booking.</p>
+        <button class="cta" type="button" id="new-quote" style="margin-top: 16px">Start a new quote</button>
       </fieldset>
       <p class="sr-only" id="readout" aria-live="polite"></p>
     </div>
@@ -705,6 +716,7 @@ text{font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-
     var sel = {};        /* key -> { value, name, fee, base, km } */
     var current = 'vehicle';
     var busy = false;
+    var sending = false, submitted = false;
     window.redeemedQuote = window.redeemedQuote || {};
 
     function isQuote() { return !!((sel.cond && sel.cond.fee === 'quote') || (sel.stain && sel.stain.fee === 'quote')); }
@@ -830,7 +842,7 @@ text{font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-
       var first = (c.name || '').split(/\s+/)[0];
       document.getElementById('done-title').textContent = first ? 'Thanks, ' + first : 'Thanks';
       var total = packageTotal(sel.package);
-      var rows = [row('Name', c.name || '-'), row('Phone', c.phone || '-'), row('Email', c.email || '-'),
+      var rows = [row('Name', c.name || '-'), row('Phone', c.phone || '-'), row('Email', c.email || '-'), row('Vehicle', c.vehicle || '-'),
         row('Preferred day', sel.day ? sel.day.name : '-'), row('Preferred time', sel.time ? sel.time.name : '-'),
         row('Package', isQuote() ? 'We will confirm after assessing' : (sel.package ? sel.package.name : '-'))];
       rows.push(row('Total', (!isQuote() && total !== null) ? priceHtml(sel.package.value, total) : 'By quote', 'total'));
@@ -846,7 +858,7 @@ text{font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-
         if (k === key && dir) { p.classList.add('in-' + dir); }
       });
       var f = flow();
-      backBtn.hidden = key === 'vehicle';
+      backBtn.hidden = key === 'vehicle' || key === 'done';
       setTrack(TRACK[key]);
       if (key === 'package') { refreshPackages(); }
       if (key === 'details') { recap(); readout.textContent = 'Review your quote and add your details.'; }
@@ -855,7 +867,7 @@ text{font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-
       if (scroll) { card.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' }); }
     }
     function go(offset, delay) {
-      if (busy) { return; }
+      if (busy || sending) { return; }
       var f = flow(), i = f.indexOf(current), target = f[i + offset];
       if (!target) { return; }
       var dir = offset > 0 ? 'fwd' : 'back';
@@ -912,20 +924,112 @@ text{font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-
         input.addEventListener('click', function () {
           sel[k] = { value: input.value, name: input.getAttribute('data-name') };
           window.redeemedQuote[k] = input.value;
-          if (sel.day && sel.time) { go(1, 420); }
+          if (sel.day && sel.time) { setTimeout(submitQuote, 420); }
         });
       });
     });
 
     backBtn.addEventListener('click', function () { go(-1, 0); });
 
-    /* Contact form: collected on the page only. Nothing is sent anywhere yet. */
+    /* ---- Sending the finished quote to Formspree ---- */
+    var FORMSPREE_ENDPOINT = 'https://formspree.io/f/xzerrqyq'; /* Formspree endpoint for new quote requests */
     var form = document.getElementById('contact');
     var note = document.getElementById('form-note');
+    var whenPanel = document.getElementById('panel-when');
+    var sendStatus = document.getElementById('send-status');
+    var sendError = document.getElementById('send-error');
+
+    function breakdownText() {
+      var f = flow(), pkg = sel.package, lines = [];
+      var renewal = pkg && pkg.value === 'renewal';
+      function add(label, key) {
+        if (f.indexOf(key) < 0 || !sel[key]) { return; }
+        var s = sel[key];
+        lines.push(label + ': ' + s.name + (s.fee === 'quote' ? ' (by quote)' : (s.fee > 0 ? ' ($' + s.fee + ')' : '')));
+      }
+      if (pkg && !isQuote()) { lines.push('Package: ' + pkg.name + (pkg.base === 'quote' ? ' (by quote)' : ' (base $' + pkg.base + ')')); }
+      add('Vehicle', 'vehicle'); add('Cab', 'cab'); add('Tray cleaning', 'tray'); add('Cargo area cleaning', 'cargo');
+      add('Area', 'area'); add('How dirty', 'cond');
+      ['pet', 'stain'].forEach(function (k) {
+        var s = sel[k]; if (!s) { return; }
+        var label = k === 'pet' ? 'Pet hair' : 'Stains';
+        var tail = s.value === 'none' ? '' : (s.fee === 'quote' ? ' (by quote)' : (renewal ? ' (removal not included in Renewal)' : (s.fee > 0 ? ' ($' + s.fee + ' included)' : '')));
+        lines.push(label + ': ' + s.name + tail);
+      });
+      return lines.join('\n');
+    }
+    function extrasText() {
+      var f = flow(), out = [];
+      if (f.indexOf('cab') > -1 && sel.cab && sel.cab.value === 'double') { out.push('Double cab'); }
+      if (f.indexOf('tray') > -1 && sel.tray && sel.tray.value === 'yes') { out.push('Tray cleaning'); }
+      if (f.indexOf('cargo') > -1 && sel.cargo && sel.cargo.value === 'yes') { out.push('Cargo area cleaning'); }
+      if (sel.pet && sel.pet.value !== 'none') { out.push('Pet hair removal (' + sel.pet.name + ')'); }
+      if (sel.stain && sel.stain.value !== 'none') { out.push('Stain removal (' + sel.stain.name + ')'); }
+      return out.length ? out.join(', ') : 'None';
+    }
+    function buildPayload() {
+      var c = window.redeemedQuote.contact || {};
+      var total = packageTotal(sel.package);
+      var quote = (!isQuote() && total !== null) ? '$' + total : 'By quote (to be priced after assessment)';
+      return {
+        name: c.name, phone: c.phone, email: c.email,
+        vehicle_make_model: c.vehicle,
+        vehicle_size: sel.vehicle ? sel.vehicle.name : '',
+        selected_services: isQuote() ? 'To be confirmed after assessment' : (sel.package ? sel.package.name : ''),
+        vehicle_condition: sel.cond ? sel.cond.name : '',
+        requested_extras: extrasText(),
+        calculated_quote: quote,
+        quote_breakdown: breakdownText(),
+        service_area: sel.area ? sel.area.name : '',
+        preferred_day: sel.day ? sel.day.name : '',
+        preferred_time: sel.time ? sel.time.name : '',
+        page: window.location.href,
+        _subject: 'New quote request: ' + (c.name || 'website') + ' (' + quote + ')'
+      };
+    }
+    function setSending(on) {
+      sending = on;
+      whenPanel.disabled = on;
+      backBtn.disabled = on;
+      sendStatus.textContent = on ? 'Sending your request...' : '';
+    }
+    function submitQuote() {
+      if (sending || submitted || !(sel.day && sel.time)) { return; }
+      sendError.hidden = true;
+      setSending(true);
+      if (form.elements._gotcha && form.elements._gotcha.value) { /* spam trap filled: pretend success, send nothing */
+        submitted = true; setSending(false); finish(); go(1, 0); return;
+      }
+      var ctrl = window.AbortController ? new AbortController() : null;
+      var timer = setTimeout(function () { if (ctrl) { ctrl.abort(); } }, 20000);
+      fetch(FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(buildPayload()),
+        signal: ctrl ? ctrl.signal : undefined
+      }).then(function (res) {
+        clearTimeout(timer);
+        if (!res.ok) { throw new Error('HTTP ' + res.status); }
+        submitted = true;
+        setSending(false);
+        finish();
+        go(1, 0);
+      }).catch(function () {
+        clearTimeout(timer);
+        setSending(false);
+        sendError.hidden = false;
+        readout.textContent = 'Your request could not be sent. Please try again.';
+        var r = document.getElementById('send-retry'); if (r) { r.focus(); }
+      });
+    }
+    document.getElementById('send-retry').addEventListener('click', submitQuote);
+    document.getElementById('new-quote').addEventListener('click', function () { window.location.reload(); });
+
+    /* Contact form: validate, then continue to the "when works best" page. The request is sent once that is chosen. */
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var ok = true;
-      ['name', 'phone', 'email'].forEach(function (n) {
+      ['name', 'phone', 'email', 'vehicle_make_model'].forEach(function (n) {
         var el = form.elements[n];
         var v = el.value.trim();
         var good = n === 'email' ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) : (n === 'phone' ? v.replace(/\D/g, '').length >= 7 : v.length > 1);
@@ -933,7 +1037,10 @@ text{font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-
         if (!good) { ok = false; }
       });
       if (!ok) { note.textContent = 'Please check the highlighted fields.'; return; }
-      window.redeemedQuote.contact = { name: form.elements.name.value.trim(), phone: form.elements.phone.value.trim(), email: form.elements.email.value.trim() };
+      window.redeemedQuote.contact = {
+        name: form.elements.name.value.trim(), phone: form.elements.phone.value.trim(),
+        email: form.elements.email.value.trim(), vehicle: form.elements.vehicle_make_model.value.trim()
+      };
       note.textContent = '';
       go(1, 0);
     });
@@ -1122,5 +1229,3 @@ text{font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-
     requestAnimationFrame(frame);
   })();
 </script>
-
-</body></html>
