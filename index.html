@@ -1294,13 +1294,32 @@ svg.zin .rl,svg.zin .sh{display:inline}
     v.defaultMuted = true; v.muted = true;
     v.setAttribute('webkit-playsinline', '');
     var inView = false, blocked = false;
+    /* Sound is on by default. Browsers only allow it after a tap or click, so: try with sound first, fall back to
+       silent autoplay if refused, and switch the sound on at the visitor's first tap anywhere on the page.
+       Once someone turns the sound off themselves, it stays off. */
+    var userMuted = false;
+    function startSilent() {
+      v.muted = true; soundLabel();
+      var q; try { q = v.play(); } catch (e) { return; }
+      if (q && q.then) { q.then(function () { blocked = false; label(); }).catch(function () { blocked = true; label(); }); }
+    }
     function play() {
+      if (!userMuted) { v.muted = false; }
       var p;
       try { p = v.play(); } catch (e) { return; }
       if (p && p.then) {
-        p.then(function () { blocked = false; label(); }).catch(function () { blocked = true; label(); });
+        p.then(function () { blocked = false; label(); soundLabel(); }).catch(function () {
+          if (!v.muted) { startSilent(); } else { blocked = true; label(); }
+        });
       }
     }
+    function unmuteOnGesture(e) {
+      if (userMuted || !v.muted) { return; }
+      if (e && e.target && e.target.closest && e.target.closest('.reel-vol')) { return; }
+      v.muted = false; soundLabel();
+      if (v.paused && inView && !userPaused) { play(); }
+    }
+    ['pointerup', 'click', 'keydown'].forEach(function (ev) { window.addEventListener(ev, unmuteOnGesture, { passive: true }); });
     /* If the phone refuses autoplay (e.g. Low Power Mode), the first touch lets it start. */
     function retryOnTouch() {
       if (blocked && inView && !userPaused && v.paused) { play(); }
@@ -1321,10 +1340,12 @@ svg.zin .rl,svg.zin .sh{display:inline}
     }
     soundBtn.addEventListener('click', function () {
       v.muted = !v.muted;
+      userMuted = v.muted;
       soundLabel();
       if (v.paused && !userPaused) { play(); }
     });
     soundLabel();
+    v.addEventListener('volumechange', soundLabel);
     v.addEventListener('play', label);
     v.addEventListener('pause', label);
     /* Progress bar: runs fast at the start and eases off toward the end, so the video feels quicker than it is.
