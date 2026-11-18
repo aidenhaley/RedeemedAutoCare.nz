@@ -1189,7 +1189,27 @@ text{font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-
       playBtn.textContent = playing ? 'Pause' : 'Play';
       playBtn.setAttribute('aria-label', playing ? 'Pause video' : 'Play video');
     }
-    function play() { var p = v.play(); if (p && p.catch) { p.catch(function () {}); } }
+    /* Phones only allow autoplay for muted, inline video, so make sure it starts that way. */
+    v.defaultMuted = true; v.muted = true;
+    v.setAttribute('webkit-playsinline', '');
+    var inView = false, blocked = false;
+    function play() {
+      var p;
+      try { p = v.play(); } catch (e) { return; }
+      if (p && p.then) {
+        p.then(function () { blocked = false; }).catch(function () { blocked = true; });
+      }
+    }
+    /* If the phone refuses autoplay (e.g. Low Power Mode), the first touch lets it start. */
+    function retryOnTouch() {
+      if (blocked && inView && !userPaused && v.paused) { play(); }
+    }
+    ['touchend', 'pointerup', 'click', 'keydown'].forEach(function (ev) {
+      window.addEventListener(ev, retryOnTouch, { passive: true });
+    });
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { v.pause(); } else if (inView && !userPaused) { play(); }
+    });
     playBtn.addEventListener('click', function () {
       if (v.paused) { userPaused = false; play(); } else { userPaused = true; v.pause(); }
     });
@@ -1203,10 +1223,16 @@ text{font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-
     v.addEventListener('pause', label);
     /* Plays while it is on screen, pauses when scrolled away. */
     if ('IntersectionObserver' in window) {
+      /* Start fetching the video a screen or so before it arrives, so it is ready to roll. */
+      var preloader = new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) { v.preload = 'auto'; preloader.disconnect(); }
+      }, { rootMargin: '900px 0px' });
+      preloader.observe(v);
       new IntersectionObserver(function (entries) {
-        if (entries[0].isIntersecting) { if (!userPaused) { play(); } } else { v.pause(); }
-      }, { threshold: 0.4 }).observe(v);
-    } else if (!userPaused) { play(); }
+        inView = entries[0].isIntersecting;
+        if (inView) { if (!userPaused) { play(); } } else { v.pause(); }
+      }, { threshold: 0.25 }).observe(v);
+    } else { inView = true; if (!userPaused) { play(); } }
     label();
   })();
 
