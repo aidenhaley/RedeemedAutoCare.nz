@@ -1942,6 +1942,19 @@ svg.zin .rl,svg.zin .sh{display:inline}
 
     function read() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } }
     function write(state, extra) { try { localStorage.setItem(KEY, JSON.stringify(Object.assign({ s: state, t: Date.now() }, extra || {}))); } catch (e) {} }
+    var RETRY = 'redeemed_offer_retry_v1';
+    function sendLead(p) {
+      return fetch(window.redeemedFormspree || 'https://formspree.io/f/xzerrqyq', {
+        method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: p.phone, discount: '5% off', source: 'Website popup', page: p.page, _subject: 'New 5% off claim: ' + p.phone })
+      });
+    }
+    try {                                              /* deliver any claim that could not be sent last time */
+      var pend = JSON.parse(localStorage.getItem(RETRY) || 'null');
+      if (pend && pend.phone && !/[?&]pf=1/.test(location.search)) {
+        sendLead(pend).then(function (r) { if (r.ok) { localStorage.removeItem(RETRY); } }).catch(function () {});
+      }
+    } catch (e) {}
     var saved = read();
     if (saved && saved.s === 'claimed') { window.redeemedOffer = { claimed: true, phone: saved.phone || '' }; try { window.dispatchEvent(new Event('redeemed-offer')); } catch (e) {} }
     var forced = /[?&]offer(=|&|$)/.test(location.search);
@@ -2026,8 +2039,11 @@ svg.zin .rl,svg.zin .sh{display:inline}
         if (!res.ok) { throw new Error('HTTP ' + res.status); }
         sending = false; complete(raw);
       }).catch(function () {
-        clearTimeout(timer); sending = false; cta.disabled = false; cta.textContent = 'Claim 5% off';
-        showError('Sorry, we could not save that. Please try again.');
+        /* Could not reach the server right now: the customer has still claimed their 5%, so keep it for them, stop the popup,
+           and keep retrying quietly in the background (every page load) until the number is delivered. */
+        clearTimeout(timer); sending = false;
+        try { localStorage.setItem(RETRY, JSON.stringify({ phone: raw, page: window.location.href, t: Date.now() })); } catch (e) {}
+        complete(raw);
       });
     });
     function complete(raw) {
