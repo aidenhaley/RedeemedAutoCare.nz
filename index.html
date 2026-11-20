@@ -1280,6 +1280,47 @@ svg.zin .rl,svg.zin .sh{display:inline}
       note.textContent = '';
       go(1, 0);
     });
+
+    /* ---- Keep the quote if the tab is refreshed: choices, step and details are saved in this browser for 7 days. ---- */
+    var QKEY = 'redeemed_quote_v1', FIELDS = ['name', 'phone', 'email', 'vehicle_make_model'];
+    function clearSaved() { try { localStorage.removeItem(QKEY); } catch (e) {} }
+    function saveQuote() {
+      if (submitted || current === 'done') { clearSaved(); return; }
+      var fields = {};
+      FIELDS.forEach(function (n) { fields[n] = form.elements[n] ? form.elements[n].value : ''; });
+      try { localStorage.setItem(QKEY, JSON.stringify({ t: Date.now(), current: current, sel: sel, fields: fields })); } catch (e) {}
+    }
+    var _show = show;
+    show = function (key, scroll, dir) { _show(key, scroll, dir); saveQuote(); };
+    FIELDS.forEach(function (n) { if (form.elements[n]) { form.elements[n].addEventListener('input', saveQuote); } });
+    ['day', 'time'].forEach(function (k) {
+      document.querySelectorAll('input[name="' + k + '"]').forEach(function (input) { input.addEventListener('click', function () { setTimeout(saveQuote, 0); }); });
+    });
+    document.getElementById('new-quote').addEventListener('click', clearSaved);
+
+    (function restore() {
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem(QKEY) || 'null'); } catch (e) {}
+      if (!saved || !saved.sel || !PANEL[saved.current] || saved.current === 'done' || Date.now() - saved.t > 7 * 864e5) { return; }
+      Object.keys(saved.sel).forEach(function (k) {
+        var v = saved.sel[k];
+        if (!v || !PANEL[k] && k !== 'day' && k !== 'time') { return; }
+        var input = document.querySelector('input[name="' + k + '"][value="' + v.value + '"]');
+        if (!input) { return; }
+        input.checked = true;
+        sel[k] = v;
+        window.redeemedQuote[k] = v.value;
+        if (k === 'area') { pins.forEach(function (g) { g.classList.toggle('sel', g.getAttribute('data-area') === v.value); }); }
+      });
+      var f = saved.fields || {};
+      FIELDS.forEach(function (n) { if (form.elements[n] && f[n]) { form.elements[n].value = f[n]; } });
+      var key = saved.current;
+      if (flow().indexOf(key) < 0 && ['package', 'details', 'when'].indexOf(key) < 0) { key = 'vehicle'; }
+      if (key === 'when') {
+        window.redeemedQuote.contact = { name: (f.name || '').trim(), phone: (f.phone || '').trim(), email: (f.email || '').trim(), vehicle: (f.vehicle_make_model || '').trim() };
+      }
+      if (sel.vehicle) { show(key, false, null); }
+    })();
   })();
 
   (function () {
@@ -1763,7 +1804,7 @@ svg.zin .rl,svg.zin .sh{display:inline}
     function read() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } }
     function write(state, extra) { try { localStorage.setItem(KEY, JSON.stringify(Object.assign({ s: state, t: Date.now() }, extra || {}))); } catch (e) {} }
     var saved = read();
-    if (saved && saved.s === 'claimed') { window.redeemedOffer = { claimed: true, phone: saved.phone || '' }; }
+    if (saved && saved.s === 'claimed') { window.redeemedOffer = { claimed: true, phone: saved.phone || '' }; try { window.dispatchEvent(new Event('redeemed-offer')); } catch (e) {} }
     var forced = /[?&]offer(=|&|$)/.test(location.search);
     var suppressed = !forced && saved && (saved.s === 'claimed' || (saved.s === 'dismissed' && Date.now() - saved.t < QUIET_DAYS * 864e5));
 
