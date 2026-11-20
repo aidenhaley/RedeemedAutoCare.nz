@@ -461,6 +461,62 @@
     .ig-handle { display: inline-block; padding: 12px 0 8px; }
     .btn { min-height: 44px; }
   }
+  /* 5% off popup: slides up shortly after the page opens */
+  .offer { position: fixed; inset: 0; z-index: 70; display: grid; align-items: end; justify-items: center; background: rgba(10, 26, 66, .62); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); opacity: 0; transition: opacity .35s ease; }
+  .offer.show { opacity: 1; }
+  .offer-card:focus, .offer-card:focus-visible { outline: none; }
+  .offer-card { position: relative; box-sizing: border-box; width: min(100%, 480px); max-height: 94vh; max-height: 94dvh; overflow-y: auto; overscroll-behavior: contain; color: var(--white); text-align: left;
+    background: radial-gradient(120% 90% at 88% 0%, #2c5cb8 0%, var(--navy) 52%, #142c63 100%) border-box no-repeat; background-color: var(--navy);
+    border-top: 3px solid var(--sky); border-radius: 28px 28px 0 0; padding: 12px 24px calc(24px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -18px 60px rgba(8, 20, 54, .55); transform: translateY(105%); will-change: transform; }
+  .offer.show .offer-card { animation: offer-up .7s cubic-bezier(.16, 1, .3, 1) both; }
+  .offer.leaving .offer-card { animation: offer-down .3s cubic-bezier(.4, 0, 1, 1) both; }
+  @keyframes offer-up { from { transform: translateY(105%); } to { transform: translateY(0); } }
+  @keyframes offer-down { from { transform: translateY(0); } to { transform: translateY(105%); } }
+  @keyframes offer-up-d { from { transform: translateY(70vh); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes offer-down-d { from { transform: translateY(0); opacity: 1; } to { transform: translateY(40vh); opacity: 0; } }
+  .offer-grab { display: grid; place-items: center; height: 26px; margin: 0 -24px; touch-action: none; cursor: grab; }
+  .offer-grab span { width: 46px; height: 5px; border-radius: 99px; background: color-mix(in srgb, var(--sky) 70%, transparent); }
+  .offer-x { position: absolute; top: 14px; right: 14px; width: 44px; height: 44px; margin: 0; padding: 0; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--white) 14%, transparent); color: var(--white); font: 400 1.7rem/1 var(--font); cursor: pointer; display: grid; place-items: center; -webkit-tap-highlight-color: transparent; }
+  .offer-x:hover { background: color-mix(in srgb, var(--white) 24%, transparent); }
+  .offer-logo { display: block; width: 138px; height: auto; margin: 4px 0 14px; }
+  .offer-hero { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+  .offer-badge { flex: 0 0 auto; width: 92px; height: 92px; border-radius: 50%; display: grid; place-content: center; text-align: center; background: var(--sky); color: var(--navy); transform: rotate(-7deg); box-shadow: 0 0 0 5px color-mix(in srgb, var(--sky) 28%, transparent), 0 10px 26px rgba(8, 20, 54, .5); }
+  .offer-badge b { font: 800 2.15rem/0.95 var(--font); letter-spacing: -0.03em; }
+  .offer-badge span { font: 700 0.78rem/1 var(--font); letter-spacing: 0.22em; padding-left: 0.22em; margin-top: 3px; }
+  .offer-card h2 { font-size: clamp(1.4rem, 5.6vw, 1.75rem); text-transform: none; letter-spacing: -0.015em; line-height: 1.12; color: var(--white); margin: 0 0 6px; }
+  .offer-card .offer-copy { font-size: 0.95rem; line-height: 1.5; color: color-mix(in srgb, var(--white) 86%, transparent); }
+  .offer-field { display: grid; gap: 7px; margin: 0 0 10px; }
+  .offer-field span { font-size: 0.74rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--sky); }
+  .offer-field input[type="tel"] { font: 600 1.1rem var(--font); letter-spacing: 0.01em; box-sizing: border-box; width: 100%; min-width: 0; height: 56px; padding: 0 18px; border-radius: 16px; border: 2px solid transparent; background: var(--white); color: var(--navy); }
+  .offer-field input[type="tel"]::placeholder { color: #8da3c4; font-weight: 500; }
+  .offer-field input[type="tel"]:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+  .offer-field input[aria-invalid="true"] { border-color: #ff8f85; }
+  .offer-err { margin: 0 0 10px; font-size: 0.86rem; font-weight: 600; color: #ffb4ac; }
+  .offer-cta { width: 100%; min-height: 56px; cursor: pointer; font-size: 1rem; }
+  .offer-cta:disabled { opacity: .7; cursor: progress; transform: none; }
+  .offer-skip { display: block; margin: 12px auto 0; padding: 10px 16px; border: 0; background: none; font: 600 0.9rem var(--font); color: color-mix(in srgb, var(--white) 78%, transparent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .offer-skip:hover { color: var(--white); }
+  .offer-fine { margin-top: 6px; font-size: 0.74rem; line-height: 1.45; color: color-mix(in srgb, var(--white) 62%, transparent); text-align: center; }
+  .offer-done { text-align: center; padding: 14px 0 6px; }
+  .offer-done .tick { width: 84px; height: 84px; margin: 0 auto 16px; border-radius: 50%; display: grid; place-items: center; background: var(--sky); color: var(--navy); box-shadow: 0 0 0 6px color-mix(in srgb, var(--sky) 28%, transparent); }
+  .offer-done .tick svg { width: 40px; height: 40px; fill: none; stroke: currentColor; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 30; stroke-dashoffset: 30; animation: offer-tick .55s .25s ease forwards; }
+  @keyframes offer-tick { to { stroke-dashoffset: 0; } }
+  .offer-done .offer-copy { margin: 0 auto 20px; max-width: 32ch; }
+  .offer-done .btn { min-height: 54px; }
+  @media (min-width: 640px) {
+    .offer { align-items: center; }
+    .offer-card { border-radius: 28px; border: 2px solid color-mix(in srgb, var(--sky) 55%, transparent); padding: 18px 30px 30px; box-shadow: 0 30px 80px rgba(8, 20, 54, .6); }
+    .offer.show .offer-card { animation-name: offer-up-d; }
+    .offer.leaving .offer-card { animation-name: offer-down-d; }
+    .offer-grab { display: none; }
+    .offer-logo { margin-top: 8px; margin-bottom: 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .offer, .offer.show { transition: none; }
+    .offer.show .offer-card, .offer.leaving .offer-card { animation: none; transform: none; }
+    .offer-done .tick svg { animation: none; stroke-dashoffset: 0; }
+  }
 </style>
 </head>
 <body>
@@ -815,6 +871,39 @@ svg.zin .rl,svg.zin .sh{display:inline}
   </div>
 </footer>
 
+<div class="offer" id="offer" role="dialog" aria-modal="true" aria-labelledby="offer-title" hidden>
+  <div class="offer-card" id="offer-card" tabindex="-1">
+    <div class="offer-grab" id="offer-grab" aria-hidden="true"><span></span></div>
+    <button type="button" class="offer-x" id="offer-x" aria-label="Close offer">&times;</button>
+    <div id="offer-ask">
+      <img class="offer-logo" id="offer-logo" alt="Redeemed Auto Care" width="138" height="37">
+      <div class="offer-hero">
+        <div class="offer-badge" aria-hidden="true"><b>5%</b><span>OFF</span></div>
+        <div>
+          <h2 id="offer-title">Get 5% off your detail</h2>
+          <p class="offer-copy">Pop in your number and we will add 5% off when we confirm your quote.</p>
+        </div>
+      </div>
+      <form id="offer-form" novalidate>
+        <label class="offer-field"><span>Mobile number</span>
+          <input type="tel" name="phone" id="offer-phone" inputmode="tel" autocomplete="tel" placeholder="022 123 4567" aria-describedby="offer-err" required>
+        </label>
+        <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+        <p class="offer-err" id="offer-err" role="alert" hidden></p>
+        <button type="submit" class="btn offer-cta" id="offer-cta">Claim 5% off</button>
+      </form>
+      <button type="button" class="offer-skip" id="offer-skip">No thanks</button>
+      <p class="offer-fine">We will only use your number to follow up about your discount and booking.</p>
+    </div>
+    <div class="offer-done" id="offer-done" hidden>
+      <div class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.6 4.6L19 7.6"/></svg></div>
+      <h2 id="offer-done-title">You are in!</h2>
+      <p class="offer-copy">Your 5% off is saved. We will apply it when we confirm your quote.</p>
+      <a class="btn" href="#quote" id="offer-go">Build my quote</a>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Customer review" hidden>
   <div class="sheet">
     <button class="close" type="button" id="close" aria-label="Close review"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
@@ -1059,6 +1148,7 @@ svg.zin .rl,svg.zin .sh{display:inline}
 
     /* ---- Sending the finished quote to Formspree ---- */
     var FORMSPREE_ENDPOINT = 'https://formspree.io/f/xzerrqyq'; /* Formspree endpoint for new quote requests */
+    window.redeemedFormspree = FORMSPREE_ENDPOINT;
     var form = document.getElementById('contact');
     var note = document.getElementById('form-note');
     var whenPanel = document.getElementById('panel-when');
@@ -1097,7 +1187,7 @@ svg.zin .rl,svg.zin .sh{display:inline}
       var c = window.redeemedQuote.contact || {};
       var total = packageTotal(sel.package);
       var quote = (!isQuote() && total !== null) ? '$' + total : 'By quote (to be priced after assessment)';
-      return {
+      var payload = {
         name: c.name, phone: c.phone, email: c.email,
         vehicle_make_model: c.vehicle,
         vehicle_size: sel.vehicle ? sel.vehicle.name : '',
@@ -1112,6 +1202,11 @@ svg.zin .rl,svg.zin .sh{display:inline}
         page: window.location.href,
         _subject: 'New quote request: ' + (c.name || 'website') + ' (' + quote + ')'
       };
+      /* The popup's 5% off is not taken off the price shown; it is flagged here so it can be applied when the quote is confirmed. */
+      if (window.redeemedOffer && window.redeemedOffer.claimed) {
+        payload.discount = '5% off claimed via website popup (phone ' + (window.redeemedOffer.phone || 'n/a') + ')';
+      }
+      return payload;
     }
     function setSending(on) {
       sending = on;
@@ -1636,6 +1731,120 @@ svg.zin .rl,svg.zin .sh{display:inline}
     if (window.ResizeObserver) { new ResizeObserver(schedule).observe(svg); } else { window.addEventListener('resize', schedule); }
     document.querySelectorAll('input[name="area"]').forEach(function (input) { input.addEventListener('change', function () { requestAnimationFrame(schedule); }); });
     apply();
+  })();
+
+  /* 5% off popup: opens a second after the page loads, slides up, collects a phone number. */
+  (function () {
+    var KEY = 'redeemed_offer_v1', QUIET_DAYS = 3, DELAY = 1000;
+    var root = document.getElementById('offer');
+    if (!root) { return; }
+    var card = document.getElementById('offer-card'), form = document.getElementById('offer-form');
+    var phone = document.getElementById('offer-phone'), err = document.getElementById('offer-err'), cta = document.getElementById('offer-cta');
+    var ask = document.getElementById('offer-ask'), done = document.getElementById('offer-done');
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var sending = false, isOpen = false, lastFocus = null;
+    window.redeemedOffer = window.redeemedOffer || { claimed: false, phone: '' };
+
+    function read() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } }
+    function write(state, extra) { try { localStorage.setItem(KEY, JSON.stringify(Object.assign({ s: state, t: Date.now() }, extra || {}))); } catch (e) {} }
+    var saved = read();
+    if (saved && saved.s === 'claimed') { window.redeemedOffer = { claimed: true, phone: saved.phone || '' }; }
+    var forced = /[?&]offer(=|&|$)/.test(location.search);
+    var suppressed = !forced && saved && (saved.s === 'claimed' || (saved.s === 'dismissed' && Date.now() - saved.t < QUIET_DAYS * 864e5));
+
+    var logoSrc = document.querySelector('.nav .logo');
+    if (logoSrc) { document.getElementById('offer-logo').src = logoSrc.src; }
+
+    function open() {
+      if (isOpen) { return; }
+      isOpen = true; lastFocus = document.activeElement;
+      root.hidden = false; void root.offsetWidth; root.classList.add('show');
+      setTimeout(function () { if (isOpen) { card.focus({ preventScroll: true }); } }, 60);
+    }
+    function close(why) {
+      if (!isOpen) { return; }
+      isOpen = false;
+      if (why === 'dismiss') { write('dismissed'); }
+      function finish() {
+        root.hidden = true; root.classList.remove('show', 'leaving'); card.style.transform = ''; card.style.animation = '';
+        if (lastFocus && lastFocus.focus) { try { lastFocus.focus({ preventScroll: true }); } catch (e) {} }
+      }
+      if (reduce) { finish(); return; }
+      card.style.animation = ''; card.style.transform = '';
+      root.classList.add('leaving'); root.style.opacity = '0';
+      setTimeout(function () { root.style.opacity = ''; finish(); }, 320);
+    }
+    root.addEventListener('click', function (e) { if (e.target === root) { close('dismiss'); } });
+    document.getElementById('offer-x').addEventListener('click', function () { close('dismiss'); });
+    document.getElementById('offer-skip').addEventListener('click', function () { close('dismiss'); });
+    document.getElementById('offer-go').addEventListener('click', function () { close('claimed'); });
+    document.addEventListener('keydown', function (e) {
+      if (!isOpen) { return; }
+      if (e.key === 'Escape') { close(done.hidden ? 'dismiss' : 'claimed'); return; }
+      if (e.key === 'Tab') {
+        var f = Array.prototype.filter.call(card.querySelectorAll('button, a[href], input:not([tabindex="-1"])'), function (n) { return n.offsetParent !== null && !n.disabled; });
+        if (!f.length) { return; }
+        var first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && (document.activeElement === first || document.activeElement === card)) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+
+    /* Swipe the handle down to put it away (touch screens). */
+    (function () {
+      var grab = document.getElementById('offer-grab'), y0 = null, dy = 0;
+      grab.addEventListener('pointerdown', function (e) { y0 = e.clientY; dy = 0; card.style.animation = 'none'; card.style.transform = 'translateY(0)'; try { grab.setPointerCapture(e.pointerId); } catch (x) {} });
+      grab.addEventListener('pointermove', function (e) { if (y0 === null) { return; } dy = Math.max(0, e.clientY - y0); card.style.transform = 'translateY(' + dy + 'px)'; });
+      function end() {
+        if (y0 === null) { return; }
+        var go = dy > 90; y0 = null;
+        if (go) { close(done.hidden ? 'dismiss' : 'claimed'); }
+        else { card.style.transition = 'transform .25s ease'; card.style.transform = 'translateY(0)'; setTimeout(function () { card.style.transition = ''; }, 260); }
+      }
+      grab.addEventListener('pointerup', end); grab.addEventListener('pointercancel', end);
+    })();
+
+    function showError(msg) {
+      err.textContent = msg; err.hidden = false; phone.setAttribute('aria-invalid', 'true');
+    }
+    function clearError() { err.hidden = true; phone.removeAttribute('aria-invalid'); }
+    phone.addEventListener('input', clearError);
+    function digitsOf(v) { return String(v).replace(/[^0-9]/g, ''); }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (sending) { return; }
+      var raw = phone.value.trim(), n = digitsOf(raw).length;
+      if (n < 8 || n > 13) { showError('Please enter a valid phone number.'); phone.focus(); return; }
+      clearError();
+      if (form.elements._gotcha && form.elements._gotcha.value) { complete(raw); return; }
+      sending = true; cta.disabled = true; cta.textContent = 'Saving...';
+      var ctrl = window.AbortController ? new AbortController() : null;
+      var timer = setTimeout(function () { if (ctrl) { ctrl.abort(); } }, 20000);
+      fetch(window.redeemedFormspree || 'https://formspree.io/f/xzerrqyq', {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: raw, discount: '5% off', source: 'Website popup', page: window.location.href, _subject: 'New 5% off claim: ' + raw }),
+        signal: ctrl ? ctrl.signal : undefined
+      }).then(function (res) {
+        clearTimeout(timer);
+        if (!res.ok) { throw new Error('HTTP ' + res.status); }
+        sending = false; complete(raw);
+      }).catch(function () {
+        clearTimeout(timer); sending = false; cta.disabled = false; cta.textContent = 'Claim 5% off';
+        showError('Sorry, we could not save that. Please try again.');
+      });
+    });
+    function complete(raw) {
+      window.redeemedOffer = { claimed: true, phone: raw };
+      write('claimed', { phone: raw });
+      ask.hidden = true; done.hidden = false;
+      document.getElementById('offer-grab').setAttribute('aria-hidden', 'true');
+      document.getElementById('offer-done-title').setAttribute('tabindex', '-1');
+      document.getElementById('offer-done-title').focus({ preventScroll: true });
+    }
+
+    if (!suppressed) { setTimeout(open, DELAY); }
   })();
 </script>
 
