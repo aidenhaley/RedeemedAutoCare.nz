@@ -61,7 +61,7 @@
   .eyebrow { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
 
   /* Hero */
-  .hero { position: relative; background: var(--navy); color: var(--white); isolation: isolate; overflow: hidden; }
+  .hero { padding-top: var(--navh, 64px); position: relative; background: var(--navy); color: var(--white); isolation: isolate; overflow: hidden; }
   .hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 82%; z-index: -2; }
   .hero::before {
     content: ""; position: absolute; inset: 0; z-index: -1;
@@ -150,8 +150,6 @@
   @media (max-width: 430px) { .nav .logo { width: 92px; } .nav-right { gap: 6px; } .nav-right .btn.small { padding: 10px 11px; } .navlink { letter-spacing: 0.03em; } }
   @media (max-width: 360px) { .nav .logo { width: 78px; } .nav-right { gap: 5px; } .navlink { font-size: 0.64rem; letter-spacing: 0.02em; } .nav-right .btn.small { padding: 9px 9px; font-size: 0.68rem; letter-spacing: 0; } .navlink.home { width: 34px; height: 34px; } .navlink.home svg { width: 19px; height: 19px; } }
   .logo-link { display: block; line-height: 0; }
-  .topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 40; background: color-mix(in srgb, var(--navy) 94%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 1px 0 color-mix(in srgb, var(--sky) 22%, transparent); }
-  .topbar .nav { padding-block: 10px; }
   section[id] { scroll-margin-top: 76px; }
   .hero-img { object-position: 50% 62%; }
   .hero h1 { max-width: 16ch; }
@@ -272,6 +270,12 @@
 
 
 <style>
+  /* Top bar: see-through at the very top, solid once you scroll, and it follows you down the page. */
+  .topbar { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; margin: 0 !important; z-index: 40; background: transparent; box-shadow: none;
+    -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0); transition: background-color .3s ease, box-shadow .3s ease, -webkit-backdrop-filter .3s ease, backdrop-filter .3s ease; }
+  .topbar.solid { background: color-mix(in srgb, var(--navy) 92%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 1px 0 color-mix(in srgb, var(--sky) 22%, transparent); }
+  .topbar .nav { padding-block: 10px; }
+  @media (prefers-reduced-motion: reduce) { .topbar { transition: none; } }
   html { background: var(--navy, #0e2150); }
   .pf-frame { position: fixed; top: 0; width: 100vw; height: 100vh; height: 100dvh; border: 0; z-index: 2147483000; background: var(--navy, #0e2150); pointer-events: none; visibility: hidden; }
   .pf-frame.go { visibility: visible; }
@@ -339,6 +343,35 @@
       busy = false; root.classList.remove('pf-run');
       if (frame) { frame.classList.remove('go'); frame.getAnimations().forEach(function (x) { x.cancel(); }); }
       document.body.getAnimations().forEach(function (x) { x.cancel(); });
+    });
+  })();
+</script>
+<script>
+  (function () {
+    var bar, q, cooling = 0;
+    function setCur(el) {
+      var cur = document.querySelector('.nav-right [aria-current]');
+      if (cur === el) { return; }
+      if (cur) { cur.removeAttribute('aria-current'); }
+      if (el) { el.setAttribute('aria-current', 'page'); }
+    }
+    function measure() { document.documentElement.style.setProperty('--navh', bar.offsetHeight + 'px'); }
+    function update() {
+      bar.classList.toggle('solid', (window.scrollY || document.documentElement.scrollTop) > 8);
+      if (q && !/aftercare/i.test(location.pathname) && Date.now() > cooling) {   /* Home page: the line moves from Home to Free quote when you reach the quote */
+        var onQuote = q.getBoundingClientRect().top <= window.innerHeight * 0.45;
+        setCur(onQuote ? document.querySelector('.nav-right .btn') : document.querySelector('.nav-right .navlink.home'));
+      }
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+      bar = document.getElementById('topbar') || document.querySelector('.topbar');
+      if (!bar) { return; }
+      q = document.getElementById('quote');
+      document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.nav-right a')) { cooling = Date.now() + 80; } }, true);
+      window.addEventListener('scroll', update, { passive: true });
+      window.addEventListener('resize', function () { measure(); update(); });
+      window.addEventListener('load', function () { measure(); update(); });
+      measure(); update();
     });
   })();
 </script>
