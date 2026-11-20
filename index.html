@@ -349,6 +349,12 @@
     position: absolute; left: 6px; top: 6px; padding: 3px 8px; border-radius: 999px;
     background: var(--sky); color: var(--navy); font-size: 0.58rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
   }
+  .sticker { position: absolute; right: 8px; bottom: 6px; z-index: 2; width: 42px; height: 42px; border-radius: 50%; display: grid; place-content: center; text-align: center; line-height: 1;
+    background: var(--sky); color: var(--navy); border: 2px solid #fff; box-shadow: 0 3px 10px rgba(10, 26, 66, .45); transform: rotate(-9deg); font-weight: 800; font-size: 0.82rem; letter-spacing: -0.01em;
+    animation: sticker-pop .5s cubic-bezier(.34, 1.56, .64, 1) both; }
+  .sticker small { display: block; margin-top: 1px; font-size: 0.43rem; font-weight: 800; letter-spacing: 0.12em; }
+  @keyframes sticker-pop { from { transform: rotate(-30deg) scale(.3); opacity: 0; } to { transform: rotate(-9deg) scale(1); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .sticker { animation: none; } }
   .pbody { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px 12px; flex: 1; }
   .pname { font-weight: 800; font-size: 0.78rem; line-height: 1.15; text-transform: uppercase; }
   .price { font-weight: 800; font-size: 1.3rem; line-height: 1; color: var(--accent); }
@@ -1009,6 +1015,10 @@ svg.zin .rl,svg.zin .sh{display:inline}
         var pkg = { value: id, base: base === 'quote' ? 'quote' : parseInt(base, 10) };
         var total = packageTotal(pkg);
         label.querySelector('.price').innerHTML = total === null ? 'By quote' : priceHtml(id, total);
+        var photo = label.querySelector('.photo'), st = photo.querySelector('.sticker');
+        if (total !== null && offerOn()) {
+          if (!st) { st = document.createElement('span'); st.className = 'sticker'; st.setAttribute('aria-hidden', 'true'); st.innerHTML = '5%<small>OFF</small>'; photo.appendChild(st); }
+        } else if (st) { st.remove(); }
         label.querySelectorAll('.feat.inc').forEach(function (n) { n.remove(); });
         var body = label.querySelector('.pbody');
         function add(text, no) {
