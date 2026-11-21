@@ -1239,7 +1239,7 @@ svg.zin .rl,svg.zin .sh{display:inline}
       var f = flow();
       backBtn.hidden = key === 'vehicle' || key === 'done';
       setTrack(TRACK[key]);
-      if (key === 'package') { refreshPackages(); }
+      if (key === 'package') { refreshPackages(); try { window.dispatchEvent(new Event('redeemed-condition-done')); } catch (e) {} }   /* condition questions finished: the 5% offer pops up */
       if (key === 'details') { recap(); readout.textContent = 'Review your quote and add your details.'; }
       else if (key === 'done') { finish(); }
       else { readout.innerHTML = readoutFor(key); }
@@ -2066,7 +2066,13 @@ svg.zin .rl,svg.zin .sh{display:inline}
       document.getElementById('offer-done-title').focus({ preventScroll: true });
     }
 
-    if (!suppressed) { setTimeout(open, DELAY); }
+    /* The offer now appears when the customer finishes the Condition step of the quote builder (once per visit, unless claimed). */
+    var offered = false;
+    window.addEventListener('redeemed-condition-done', function () {
+      if (suppressed || offered || window.redeemedOffer.claimed) { return; }
+      offered = true; setTimeout(open, 350);
+    });
+    if (forced) { setTimeout(open, DELAY); }   /* ?offer in the address still opens it straight away for previewing */
   })();
 </script>
 
