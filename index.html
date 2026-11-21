@@ -538,6 +538,10 @@
   .offer-skip { display: block; margin: 12px auto 0; padding: 10px 16px; border: 0; background: none; font: 600 0.9rem var(--font); color: color-mix(in srgb, var(--white) 78%, transparent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
   .offer-skip:hover { color: var(--white); }
   .offer-fine { margin-top: 6px; font-size: 0.74rem; line-height: 1.45; color: color-mix(in srgb, var(--white) 62%, transparent); text-align: center; }
+  .offer-sure { text-align: center; padding: 10px 0 6px; }
+  .offer-sure .offer-badge { margin: 0 auto 14px; }
+  .offer-sure h2 { margin: 0 0 8px; }
+  .offer-sure .offer-copy { margin: 0 auto 18px; max-width: 34ch; }
   .offer-done { text-align: center; padding: 14px 0 6px; }
   .offer-done .tick { width: 84px; height: 84px; margin: 0 auto 16px; border-radius: 50%; display: grid; place-items: center; background: var(--sky); color: var(--navy); box-shadow: 0 0 0 6px color-mix(in srgb, var(--sky) 28%, transparent); }
   .offer-done .tick svg { width: 40px; height: 40px; fill: none; stroke: currentColor; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 30; stroke-dashoffset: 30; animation: offer-tick .55s .25s ease forwards; }
@@ -1049,6 +1053,13 @@ svg.zin .rl,svg.zin .sh{display:inline}
       </form>
       <button type="button" class="offer-skip" id="offer-skip">No thanks</button>
       <p class="offer-fine">We will only use your number to follow up about your discount and booking.</p>
+    </div>
+    <div class="offer-sure" id="offer-sure" hidden>
+      <div class="offer-badge" aria-hidden="true"><b>5%</b><span>OFF</span></div>
+      <h2 id="offer-sure-title">Are you sure?</h2>
+      <p class="offer-copy">This 5% off is only available right now. Once you close this, there are no other opportunities to claim it.</p>
+      <button type="button" class="btn offer-cta" id="offer-sure-claim">Claim my 5% off</button>
+      <button type="button" class="offer-skip" id="offer-sure-pass">No thanks, I will pass</button>
     </div>
     <div class="offer-done" id="offer-done" hidden>
       <div class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.6 4.6L19 7.6"/></svg></div>
@@ -1992,13 +2003,29 @@ svg.zin .rl,svg.zin .sh{display:inline}
       root.classList.add('leaving'); root.style.opacity = '0';
       setTimeout(function () { root.style.opacity = ''; finish(); }, 320);
     }
-    root.addEventListener('click', function (e) { if (e.target === root) { close('dismiss'); } });
-    document.getElementById('offer-x').addEventListener('click', function () { close('dismiss'); });
-    document.getElementById('offer-skip').addEventListener('click', function () { close('dismiss'); });
+    var sure = document.getElementById('offer-sure');
+    function attemptDismiss() {            /* first try to close = "Are you sure?"; a second try really closes */
+      if (!done.hidden) { close('claimed'); return; }
+      if (sure.hidden) {
+        ask.hidden = true; sure.hidden = false;
+        card.style.transition = 'transform .25s ease'; card.style.transform = 'translateY(0)'; setTimeout(function () { card.style.transition = ''; card.style.transform = ''; }, 280);
+        document.getElementById('offer-grab').setAttribute('aria-hidden', 'true');
+        var st = document.getElementById('offer-sure-title'); st.setAttribute('tabindex', '-1'); st.focus({ preventScroll: true });
+        return;
+      }
+      close('dismiss');
+    }
+    document.getElementById('offer-sure-claim').addEventListener('click', function () {
+      sure.hidden = true; ask.hidden = false; try { phone.focus({ preventScroll: true }); } catch (e) {}
+    });
+    document.getElementById('offer-sure-pass').addEventListener('click', function () { close('dismiss'); });
+    root.addEventListener('click', function (e) { if (e.target === root) { attemptDismiss(); } });
+    document.getElementById('offer-x').addEventListener('click', attemptDismiss);
+    document.getElementById('offer-skip').addEventListener('click', attemptDismiss);
     document.getElementById('offer-go').addEventListener('click', function () { close('claimed'); });
     document.addEventListener('keydown', function (e) {
       if (!isOpen) { return; }
-      if (e.key === 'Escape') { close(done.hidden ? 'dismiss' : 'claimed'); return; }
+      if (e.key === 'Escape') { attemptDismiss(); return; }
       if (e.key === 'Tab') {
         var f = Array.prototype.filter.call(card.querySelectorAll('button, a[href], input:not([tabindex="-1"])'), function (n) { return n.offsetParent !== null && !n.disabled; });
         if (!f.length) { return; }
@@ -2016,7 +2043,7 @@ svg.zin .rl,svg.zin .sh{display:inline}
       function end() {
         if (y0 === null) { return; }
         var go = dy > 90; y0 = null;
-        if (go) { close(done.hidden ? 'dismiss' : 'claimed'); }
+        if (go) { attemptDismiss(); }
         else { card.style.transition = 'transform .25s ease'; card.style.transform = 'translateY(0)'; setTimeout(function () { card.style.transition = ''; }, 260); }
       }
       grab.addEventListener('pointerup', end); grab.addEventListener('pointercancel', end);
