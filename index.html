@@ -1273,12 +1273,13 @@ svg.zin .rl,svg.zin .sh{display:inline}
         }, 300);
       }, delay || 0);
     }
+    var ADDON_FACTOR = 0.7;   /* all non-package add-ons (vehicle, ute/van options, travel, condition, pet hair, stains) */
     function pick(key, input, advance) {
       var fee = input.getAttribute('data-fee');
       var base = input.getAttribute('data-base');
       sel[key] = {
         value: input.value, name: input.getAttribute('data-name'),
-        fee: fee === 'quote' ? 'quote' : (fee === null ? null : parseInt(fee, 10)),
+        fee: fee === 'quote' ? 'quote' : (fee === null ? null : Math.round(parseInt(fee, 10) * ADDON_FACTOR)),   /* every non-package add-on is 30% cheaper */
         base: base === null ? null : (base === 'quote' ? 'quote' : parseInt(base, 10)),
         km: input.getAttribute('data-km')
       };
