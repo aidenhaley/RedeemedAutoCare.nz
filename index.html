@@ -944,6 +944,7 @@ svg.zin .rl,svg.zin .sh{display:inline}
             <label class="field"><span>Full name</span><input type="text" name="name" autocomplete="name" required></label>
             <label class="field"><span>Phone number</span><input type="tel" name="phone" autocomplete="tel" inputmode="tel" required></label>
             <label class="field"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>
+            <label class="field"><span>Address</span><input type="text" name="address" autocomplete="street-address" placeholder="Street address and suburb" required></label>
             <label class="field"><span>Vehicle make and model</span><input type="text" name="vehicle_make_model" autocomplete="off" placeholder="e.g. Toyota Hilux" required></label>
             <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
             <button class="confirm" type="submit" id="send">Get my quote</button>
@@ -1269,7 +1270,7 @@ svg.zin .rl,svg.zin .sh{display:inline}
       var first = (c.name || '').split(/\s+/)[0];
       document.getElementById('done-title').textContent = first ? 'Thanks, ' + first : 'Thanks';
       var total = grandTotal(sel.package);
-      var rows = [row('Name', c.name || '-'), row('Phone', c.phone || '-'), row('Email', c.email || '-'), row('Vehicle', c.vehicle || '-'),
+      var rows = [row('Name', c.name || '-'), row('Phone', c.phone || '-'), row('Email', c.email || '-'), row('Address', c.address || '-'), row('Vehicle', c.vehicle || '-'),
         row('Preferred day', sel.day ? sel.day.name : '-'), row('Preferred time', sel.time ? sel.time.name : '-'),
         row('Package', isQuote() ? 'We will confirm after assessing' : (sel.package ? sel.package.name : '-'))];
       if (!isQuote() && extrasList().length) { rows.push(row('Extras', extrasList().map(function (x) { return x.name; }).join(', '))); }
@@ -1422,6 +1423,7 @@ svg.zin .rl,svg.zin .sh{display:inline}
       var quote = (!isQuote() && total !== null) ? (offerOn() ? '$' + discounted(total) + ' (was $' + total + ', 5% off applied)' : '$' + total) : 'By quote (to be priced after assessment)';
       var payload = {
         name: c.name, phone: c.phone, email: c.email,
+        address: c.address,
         vehicle_make_model: c.vehicle,
         vehicle_size: sel.vehicle ? sel.vehicle.name : '',
         selected_services: isQuote() ? 'To be confirmed after assessment' : (sel.package ? sel.package.name : ''),
@@ -1483,7 +1485,7 @@ svg.zin .rl,svg.zin .sh{display:inline}
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var ok = true;
-      ['name', 'phone', 'email', 'vehicle_make_model'].forEach(function (n) {
+      ['name', 'phone', 'email', 'address', 'vehicle_make_model'].forEach(function (n) {
         var el = form.elements[n];
         var v = el.value.trim();
         var good = n === 'email' ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) : (n === 'phone' ? v.replace(/\D/g, '').length >= 7 : v.length > 1);
@@ -1493,14 +1495,14 @@ svg.zin .rl,svg.zin .sh{display:inline}
       if (!ok) { note.textContent = 'Please check the highlighted fields.'; return; }
       window.redeemedQuote.contact = {
         name: form.elements.name.value.trim(), phone: form.elements.phone.value.trim(),
-        email: form.elements.email.value.trim(), vehicle: form.elements.vehicle_make_model.value.trim()
+        email: form.elements.email.value.trim(), address: form.elements.address.value.trim(), vehicle: form.elements.vehicle_make_model.value.trim()
       };
       note.textContent = '';
       go(1, 0);
     });
 
     /* ---- Keep the quote if the tab is refreshed: choices, step and details are saved in this browser for 7 days. ---- */
-    var QKEY = 'redeemed_quote_v1', FIELDS = ['name', 'phone', 'email', 'vehicle_make_model'];
+    var QKEY = 'redeemed_quote_v1', FIELDS = ['name', 'phone', 'email', 'address', 'vehicle_make_model'];
     function clearSaved() { try { localStorage.removeItem(QKEY); } catch (e) {} }
     function saveQuote() {
       if (submitted || current === 'done') { clearSaved(); return; }
@@ -1540,7 +1542,7 @@ svg.zin .rl,svg.zin .sh{display:inline}
       var key = saved.current;
       if (flow().indexOf(key) < 0 && ['package', 'extras', 'details', 'when'].indexOf(key) < 0) { key = 'vehicle'; }
       if (key === 'when') {
-        window.redeemedQuote.contact = { name: (f.name || '').trim(), phone: (f.phone || '').trim(), email: (f.email || '').trim(), vehicle: (f.vehicle_make_model || '').trim() };
+        window.redeemedQuote.contact = { name: (f.name || '').trim(), phone: (f.phone || '').trim(), email: (f.email || '').trim(), address: (f.address || '').trim(), vehicle: (f.vehicle_make_model || '').trim() };
       }
       if (sel.vehicle) { show(key, false, null); }
     })();
